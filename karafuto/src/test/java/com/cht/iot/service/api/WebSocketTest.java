@@ -16,11 +16,11 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cht.iot.persistence.entity.api.ISubscribe;
+import com.cht.iot.util.JsonUtils;
 
 @ClientEndpoint
 public class WebSocketTest {
@@ -71,11 +71,11 @@ public class WebSocketTest {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		String host = "tomcat.hiot.net.tw"; // CHANGE TO THE ONLINE SERVER HOST
-		int port = 8080;
-		String apiKey = "F4BYE2EE3YA250K3";	// CHANGE TO YOUR PROJECT API KEY
+		String host = "ap.iot.cht.com.tw"; // CHANGE TO THE ONLINE SERVER HOST
+		int port = 80;
+		String apiKey = "H5T40KG55AWAA9U4";	// CHANGE TO YOUR PROJECT API KEY
 		
-		String deviceId = "1386";		// CHANGE TO YOUR DEVICE ID
+		String deviceId = "25"	;		// CHANGE TO YOUR DEVICE ID
 		String sensorId = "sensor-0";	// CHANGE TO YOUR SENSOR ID
 		
 		String url = String.format("ws://%s:%d/iot/ws/rawdata", host, port);		
@@ -88,9 +88,8 @@ public class WebSocketTest {
 		ISubscribe is = new ISubscribe();
 		is.setCk(apiKey);
 		is.setResources(Arrays.asList(topic));
-		
-		ObjectMapper jackson = new ObjectMapper();		
-		String json = jackson.writeValueAsString(is);
+					
+		String json = JsonUtils.toJson(is);
 		
 		LOG.info("Send - " + json); // {"ck":"aabbccdd","resources":["/v1/device/1/sensor/sensor-0/rawdata"]}
 		
