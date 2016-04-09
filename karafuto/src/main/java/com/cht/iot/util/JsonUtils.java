@@ -14,19 +14,39 @@ public class JsonUtils {
 		jackson.setSerializationInclusion(Inclusion.NON_NULL);
 	}
 	
-	public static String toJson(Object obj) throws IOException {
-		return jackson.writeValueAsString(obj);
+	public static String toJson(Object obj) {
+		try {
+			return jackson.writeValueAsString(obj);
+			
+		} catch (IOException e) {
+			throw new OperationException(e.getMessage(), e);
+		}
 	}
 	
-	public static <T> T fromJson(InputStream is, Class<T> clazz) throws IOException {
-		return jackson.readValue(is, clazz);
+	public static <T> T fromJson(InputStream is, Class<T> clazz) {
+		try {
+			return jackson.readValue(is, clazz);
+			
+		} catch (IOException e) {
+			throw new OperationException(e.getMessage(), e);
+		}
 	}
 	
-	public static <T> T fromJson(Reader r, Class<T> clazz) throws IOException {
-		return jackson.readValue(r, clazz);
+	public static <T> T fromJson(Reader r, Class<T> clazz) {
+		try {
+			return jackson.readValue(r, clazz);
+			
+		} catch (IOException e) {
+			throw new OperationException(e.getMessage(), e);
+		}
 	}
 	
-	public static <T> T fromJson(String s, Class<T> clazz) throws IOException {
-		return jackson.readValue(s, clazz);
+	public static <T> T fromJson(String s, Class<T> clazz) {
+		try {
+			return jackson.readValue(s, clazz);
+			
+		} catch (IOException e) {
+			throw new OperationException(e.getMessage(), e);
+		}
 	}
 }

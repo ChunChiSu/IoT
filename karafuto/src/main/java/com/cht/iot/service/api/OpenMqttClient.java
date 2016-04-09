@@ -30,7 +30,7 @@ public class OpenMqttClient {
 	int connectionTimeout = 5; // 5 seconds
 	int keepAliveInterval = 30;
 	
-	Listener listener = new NullListener();
+	Listener listener = new ListenerAdapter();
 	List<String> topics = Collections.emptyList();
 	
 	Thread thread;
@@ -315,7 +315,7 @@ public class OpenMqttClient {
 		public void onSetDeviceId(String topic, String apiKey, String deviceId);
 	}
 	
-	protected static class NullListener implements Listener {
+	public static class ListenerAdapter implements Listener {
 		@Override
 		public void onRawdata(String topic, Rawdata rawdata) {
 		}

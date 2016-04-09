@@ -439,7 +439,7 @@ public class OpenRESTfulClient {
 
 		ByteArrayPart bap = new ByteArrayPart(imageName, imageType, IOUtils.toByteArray(imageBody));
 		
-		MultipartRequestEntity mre = new MultipartRequestEntity(new Part[] { mp, bap}, pm.getParams());
+		MultipartRequestEntity mre = new MultipartRequestEntity(new Part[] { mp, bap }, pm.getParams());
 		pm.setRequestEntity(mre);
 		
 		http(pm);
