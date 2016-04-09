@@ -168,7 +168,7 @@ public class Main {
 			@Override
 			public void run() {
 				try {
-					String value = state.getName();					
+					String value = (PinState.HIGH == state)? "1" : "0";				
 					restful.saveRawdata(deviceId, buttonSensorId, value);
 					
 					LOG.info("Rawdata is saved");
