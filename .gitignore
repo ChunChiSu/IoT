@@ -1,0 +1,15 @@
+.project
+.settings
+.gradle
+/karafuto/bin
+/karafuto/build
+/karafuto/.settings
+/karafuto/.project
+/karafuto/.classpath
+/karafuto/.gradle
+/karafuto-demo-pi/bin
+/karafuto-demo-pi/build
+/karafuto-demo-pi/.settings
+/karafuto-demo-pi/.project
+/karafuto-demo-pi/.classpath
+/karafuto-demo-pi/.gradle
