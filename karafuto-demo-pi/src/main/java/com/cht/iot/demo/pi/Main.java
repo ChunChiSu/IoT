@@ -54,10 +54,12 @@ public class Main {
 	String ble = "hci0"; // BLUETOOTH LOW ENERGY
 	String braceletAddress = "88:0F:10:23:65:0A"; // MiBand Bluetooth MAC address
 	
+	String shutterSensorId = "shutter"; // CHANGE TO YOUR SENSOR ID
+	
 	String cameraSensorId = "camera"; // CHANGE TO YOUR SENSOR ID
 	String cameraDevice = "/dev/video0";
-	int cameraWidth = 320;
-	int cameraHeight = 240;
+	int cameraWidth = 480;
+	int cameraHeight = 360;
 	int cameraQuality = 70;
 	double cameraAngdeg = 180;
 	
@@ -120,8 +122,9 @@ public class Main {
 	protected void initMqtt() {
 		String lampTopic = OpenMqttClient.getRawdataTopic(deviceId, lampSensorId); // '/v1/device/25/sensor/lamp/rawdata'
 		String braceletTopic = OpenMqttClient.getRawdataTopic(deviceId, braceletSensorId); // '/v1/device/25/sensor/bracelet/rawdata'
+		String shutterTopic = OpenMqttClient.getRawdataTopic(deviceId, shutterSensorId); // '/v1/device/25/sensor/shutter/rawdata'
 		
-		mqtt.setTopics(Arrays.asList(lampTopic, braceletTopic));
+		mqtt.setTopics(Arrays.asList(lampTopic, braceletTopic, shutterTopic));
 		
 		mqtt.setListener(new OpenMqttClient.ListenerAdapter() {			
 			@Override
@@ -151,6 +154,9 @@ public class Main {
 				
 			} else if (braceletSensorId.equals(id)) {				
 				vibrateBracelet(); // to your bracelet (www.mi.com [Xiaomi China])
+				
+			} else if (shutterSensorId.equals(id)) {
+				saveSnapshot(); // take a picture
 			}
 		}
 	}
