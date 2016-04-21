@@ -8,6 +8,7 @@
  4. 透過 git clone https://github.com/YunYenWang/IoT.git 獲取 Open API 主程式。
  5. cd karafuto 後下達 gradle eclipse 可產生 Eclipse 專案，開發者可透過 Eclipse 匯入專案進行研發驗證測試。
  6. 若要編譯 Raspberry Pi 3 的範例程式，請 cd karafuto-demo-pi 後下達 gradle distTar 即可在 build/distributions 獲取可執行的包裝環境，上傳至 Pi 平台解壓縮後，直接執行 bin/karafuto-demo-pi 即可啟動應用。
+
 ### Open API RESTful 通訊協定
   http://iot.cht.com.tw/iot/developer/device
   
