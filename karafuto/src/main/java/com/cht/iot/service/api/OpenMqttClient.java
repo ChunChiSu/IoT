@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -19,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cht.iot.persistence.entity.data.Rawdata;
+import com.cht.iot.util.JsonUtils;
 
 public class OpenMqttClient {
 	static final Logger LOG = LoggerFactory.getLogger(OpenMqttClient.class);
@@ -31,10 +30,8 @@ public class OpenMqttClient {
 	int connectionTimeout = 5; // 5 seconds
 	int keepAliveInterval = 30;
 	
-	Listener listener = new NullListener();
+	Listener listener = new ListenerAdapter();
 	List<String> topics = Collections.emptyList();
-	
-	final ObjectMapper jackson;
 	
 	Thread thread;
 	
@@ -48,9 +45,6 @@ public class OpenMqttClient {
 	public OpenMqttClient(String host, int port, String apiKey) {
 		url = String.format("tcp://%s:%d", host, port);
 		this.apiKey = apiKey;
-		
-		jackson = new ObjectMapper();
-		jackson.setSerializationInclusion(Inclusion.NON_NULL);
 	}
 	
 	/**
@@ -113,11 +107,11 @@ public class OpenMqttClient {
 	}
 	
 	protected Rawdata toRawdata(String json) throws IOException {
-		return jackson.readValue(json, Rawdata.class);
+		return JsonUtils.fromJson(json, Rawdata.class);
 	}
 	
 	protected Provision toProvision(String json) throws IOException {
-		return jackson.readValue(json, Provision.class);
+		return JsonUtils.fromJson(json, Provision.class);
 	}
 	
 	// ======
@@ -321,7 +315,7 @@ public class OpenMqttClient {
 		public void onSetDeviceId(String topic, String apiKey, String deviceId);
 	}
 	
-	protected static class NullListener implements Listener {
+	public static class ListenerAdapter implements Listener {
 		@Override
 		public void onRawdata(String topic, Rawdata rawdata) {
 		}

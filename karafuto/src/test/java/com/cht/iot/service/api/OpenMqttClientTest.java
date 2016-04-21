@@ -9,18 +9,18 @@ import com.cht.iot.service.api.OpenMqttClient.Listener;
 public class OpenMqttClientTest {
 
 	public static void main(String[] args) throws Exception {
-		String host = "tomcat.hiot.net.tw";		// CHANGE TO ONLINE SERVER
+		String host = "ap.iot.cht.com.tw";		// CHANGE TO ONLINE SERVER
 		int port = 1883;
-		String apiKey = "F4BYE2EE3YA250K3";		// CHANGE TO YOUR PROJECT API KEY
+		String apiKey = "H5T40KG55AWAA9U4";		// CHANGE TO YOUR PROJECT API KEY
 		String serialId = "001002003004005";	// CHANGE TO YOUR EQUIPMENT SERIAL NUMBER
 		
-		String deviceId = "1386";					// CHANGE TO YOUR DEVICE ID
+		String deviceId = "25";					// CHANGE TO YOUR DEVICE ID
 		String sensorId = "sensor-0";				// CHANGE TO YOUR SENSOR ID
 		
 		OpenMqttClient mqc = new OpenMqttClient(host, port, apiKey);
 		
 		String registryTopic = OpenMqttClient.getRegistryTopic(serialId); // '/v1/registry/001002003004005'
-		String rawdataTopic = OpenMqttClient.getRawdataTopic(deviceId, sensorId); // '/v1/device/1/sensor/sensor-0/rawdata'
+		String rawdataTopic = OpenMqttClient.getRawdataTopic(deviceId, sensorId); // '/v1/device/25/sensor/sensor-0/rawdata'
 		
 		List<String> topics = Arrays.asList(registryTopic, rawdataTopic);
 		mqc.setTopics(topics);

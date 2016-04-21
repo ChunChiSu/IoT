@@ -23,9 +23,8 @@ import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.PartBase;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +35,7 @@ import com.cht.iot.persistence.entity.api.ISensor;
 import com.cht.iot.persistence.entity.api.ISheet;
 import com.cht.iot.persistence.entity.data.Rawdata;
 import com.cht.iot.persistence.entity.data.Record;
+import com.cht.iot.util.JsonUtils;
 
 public class OpenRESTfulClient {
 	static final Logger LOG = LoggerFactory.getLogger(OpenRESTfulClient.class);
@@ -50,7 +50,6 @@ public class OpenRESTfulClient {
 	final String apiKey;
 	
 	final HttpClient client;
-	final ObjectMapper jackson;
 	
 	/**
 	 * Build a RESTful client to access the IoT service.
@@ -65,9 +64,12 @@ public class OpenRESTfulClient {
 		this.apiKey = apiKey;
 		
 		client = new HttpClient();
-		
-		jackson = new ObjectMapper();
-		jackson.setSerializationInclusion(Inclusion.NON_NULL);
+	}
+	
+	public void setTimeout(int timeout) {
+		HttpConnectionManagerParams hcmp = client.getHttpConnectionManager().getParams();
+		hcmp.setConnectionTimeout(timeout);
+		hcmp.setSoTimeout(timeout);
 	}
 	
 	public synchronized static final String now() {
@@ -94,13 +96,13 @@ public class OpenRESTfulClient {
 		return http(eem);
 	}
 	
-	protected String toJson(Object obj) throws IOException {
-		return jackson.writeValueAsString(obj);
-	}
-	
-	protected <T> T fromJson(InputStream is, Class<T> clazz) throws IOException {
-		return jackson.readValue(is, clazz);
-	}
+//	protected String toJson(Object obj) throws IOException {
+//		return jackson.writeValueAsString(obj);
+//	}
+//	
+//	protected <T> T fromJson(InputStream is, Class<T> clazz) throws IOException {
+//		return jackson.readValue(is, clazz);
+//	}
 
 	protected String encode(String s) throws IOException {
 		return URLEncoder.encode(s, "UTF-8");
@@ -119,9 +121,9 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device", host, port);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = toJson(dev);		
+		String json = JsonUtils.toJson(dev);		
 		
-		IId iid = fromJson(post(pm, json), IId.class);
+		IId iid = JsonUtils.fromJson(post(pm, json), IId.class);
 		dev.setId(iid.getId());
 		
 		return dev;
@@ -138,7 +140,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device/%s", host, port, dev.getId());
 		
 		PutMethod pm = new PutMethod(url);
-		String json = toJson(dev);
+		String json = JsonUtils.toJson(dev);
 		
 		post(pm, json);
 		
@@ -156,7 +158,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device/%s", host, port, deviceId);
 		
 		GetMethod gm = new GetMethod(url);
-		return fromJson(http(gm), IDevice.class);		
+		return JsonUtils.fromJson(http(gm), IDevice.class);		
 	}
 	
 	/**
@@ -169,7 +171,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device", host, port);
 		
 		GetMethod gm = new GetMethod(url);
-		return fromJson(http(gm), IDevice[].class);
+		return JsonUtils.fromJson(http(gm), IDevice[].class);
 	}
 	
 	/**
@@ -199,7 +201,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor", host, port, deviceId);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = toJson(sensor);		
+		String json = JsonUtils.toJson(sensor);		
 		
 		post(pm, json);
 		
@@ -218,7 +220,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensor.getId());
 		
 		PutMethod pm = new PutMethod(url);
-		String json = toJson(sensor);
+		String json = JsonUtils.toJson(sensor);
 		
 		post(pm, json);
 		
@@ -237,7 +239,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
-		return fromJson(http(gm), ISensor.class);		
+		return JsonUtils.fromJson(http(gm), ISensor.class);		
 	}
 	
 	/**
@@ -251,7 +253,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor", host, port, deviceId);
 		
 		GetMethod gm = new GetMethod(url);
-		return fromJson(http(gm), ISensor[].class);
+		return JsonUtils.fromJson(http(gm), ISensor[].class);
 	}
 	
 	/**
@@ -292,7 +294,7 @@ public class OpenRESTfulClient {
 		rawdata.setValue(value);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = toJson(new Rawdata[] { rawdata });
+		String json = JsonUtils.toJson(new Rawdata[] { rawdata });
 		
 		post(pm, json);
 	}
@@ -333,7 +335,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/rawdata", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
-		return fromJson(http(gm), Rawdata.class);
+		return JsonUtils.fromJson(http(gm), Rawdata.class);
 	}
 	
 	/**
@@ -370,7 +372,7 @@ public class OpenRESTfulClient {
 		String url = sb.substring(0, sb.length() - 1);
 		
 		GetMethod gm = new GetMethod(url);
-		return fromJson(http(gm), Rawdata[].class);		
+		return JsonUtils.fromJson(http(gm), Rawdata[].class);		
 	}
 	
 	/**
@@ -428,7 +430,7 @@ public class OpenRESTfulClient {
 		rawdata.setLon(lon);
 		rawdata.setValue(value);
 		
-		String meta = toJson(rawdata);
+		String meta = JsonUtils.toJson(rawdata);
 		
 		PostMethod pm = new PostMethod(url);
 		
@@ -437,7 +439,7 @@ public class OpenRESTfulClient {
 
 		ByteArrayPart bap = new ByteArrayPart(imageName, imageType, IOUtils.toByteArray(imageBody));
 		
-		MultipartRequestEntity mre = new MultipartRequestEntity(new Part[] { mp, bap}, pm.getParams());
+		MultipartRequestEntity mre = new MultipartRequestEntity(new Part[] { mp, bap }, pm.getParams());
 		pm.setRequestEntity(mre);
 		
 		http(pm);
@@ -456,7 +458,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/snapshot/meta", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
-		return fromJson(http(gm), Rawdata.class);
+		return JsonUtils.fromJson(http(gm), Rawdata.class);
 	}
 	
 	/**
@@ -486,7 +488,7 @@ public class OpenRESTfulClient {
 		String url = sb.substring(0, sb.length() - 1);
 		
 		GetMethod gm = new GetMethod(url);
-		return fromJson(http(gm), Rawdata[].class);		
+		return JsonUtils.fromJson(http(gm), Rawdata[].class);		
 	}
 	
 	/**
@@ -563,7 +565,7 @@ public class OpenRESTfulClient {
 		String url = String.format("http://%s:%d/iot/v1/device/%s/sheet", host, port, deviceId);
 		
 		PutMethod pm = new PutMethod(url);
-		String json = toJson(sheet);		
+		String json = JsonUtils.toJson(sheet);		
 		
 		post(pm, json);
 		
@@ -583,7 +585,7 @@ public class OpenRESTfulClient {
 		
 		GetMethod gm = new GetMethod(url);
 		
-		return fromJson(http(gm), ISheet.class);
+		return JsonUtils.fromJson(http(gm), ISheet.class);
 	}
 	
 	/**
@@ -598,7 +600,7 @@ public class OpenRESTfulClient {
 		
 		GetMethod gm = new GetMethod(url);
 		
-		return fromJson(http(gm), ISheet[].class);
+		return JsonUtils.fromJson(http(gm), ISheet[].class);
 	}
 	
 	/**
@@ -634,7 +636,7 @@ public class OpenRESTfulClient {
 		record.setValue(value);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = toJson(new Record[] { record });
+		String json = JsonUtils.toJson(new Record[] { record });
 		
 		post(pm, json);
 	}
@@ -652,7 +654,7 @@ public class OpenRESTfulClient {
 		
 		GetMethod gm = new GetMethod(url);
 		
-		return fromJson(http(gm), Record.class);
+		return JsonUtils.fromJson(http(gm), Record.class);
 	}
 	
 	/**
@@ -690,7 +692,7 @@ public class OpenRESTfulClient {
 		
 		GetMethod gm = new GetMethod(url);
 		
-		return fromJson(http(gm), Record[].class);		
+		return JsonUtils.fromJson(http(gm), Record[].class);		
 	}
 	
 	/**
@@ -741,7 +743,7 @@ public class OpenRESTfulClient {
 		provision.setDigest(digest);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = toJson(provision);
+		String json = JsonUtils.toJson(provision);
 		
 		post(pm, json);
 	}
@@ -763,7 +765,7 @@ public class OpenRESTfulClient {
 		provision.setDeviceId(deviceId);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = toJson(provision);
+		String json = JsonUtils.toJson(provision);
 		
 		post(pm, json);
 	}
