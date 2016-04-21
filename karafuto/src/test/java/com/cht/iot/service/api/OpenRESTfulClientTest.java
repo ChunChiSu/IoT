@@ -29,6 +29,10 @@ public class OpenRESTfulClientTest {
 	final int port = 8080;						// CHANGE TO ONLINE SERVER
 	final String apiKey = "F4BYE2EE3YA250K3";	// CHANGE TO YOUR PROJECT API KEY
 	
+//	final String host = "localhost";		// CHANGE TO ONLINE SERVER
+//	final int port = 8080;						// CHANGE TO ONLINE SERVER
+//	final String apiKey = "H5T40KG55AWAA9U4";	// CHANGE TO YOUR PROJECT API KEY
+	
 	final OpenRESTfulClient client = new OpenRESTfulClient(host, port, apiKey);
 	
 	final Random random = new Random(System.currentTimeMillis());
