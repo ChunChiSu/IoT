@@ -29,7 +29,7 @@ public class Main {
 	
 	final GpioController gpio;
 	
-	final String host = "ap.iot.cht.com.tw"; // CHANGE TO ONLINE SERVER	
+	final String host = "iot.cht.com.tw"; // CHANGE TO ONLINE SERVER	
 		
 	final int restfulPort = 80;
 	final OpenRESTfulClient restful;	
