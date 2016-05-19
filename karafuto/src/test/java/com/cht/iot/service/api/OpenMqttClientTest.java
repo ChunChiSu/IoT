@@ -9,7 +9,7 @@ import com.cht.iot.service.api.OpenMqttClient.Listener;
 public class OpenMqttClientTest {
 
 	public static void main(String[] args) throws Exception {
-		String host = "ap.iot.cht.com.tw";		// CHANGE TO ONLINE SERVER
+		String host = "iot.cht.com.tw";
 		int port = 1883;
 		String apiKey = "H5T40KG55AWAA9U4";		// CHANGE TO YOUR PROJECT API KEY
 		String serialId = "001002003004005";	// CHANGE TO YOUR EQUIPMENT SERIAL NUMBER

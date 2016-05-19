@@ -27,8 +27,8 @@ import com.cht.iot.util.JsonUtils;
 public class OpenRESTfulClientTest {
 	static final Logger LOG = LoggerFactory.getLogger(OpenRESTfulClientTest.class);	
 	
-	final String host = "ap.iot.cht.com.tw";	// CHANGE TO ONLINE SERVER
-	final int port = 80;						// CHANGE TO ONLINE SERVER
+	final String host = "iot.cht.com.tw";
+	final int port = 80;
 	final int timeout = 5000;
 	final String apiKey = "H5T40KG55AWAA9U4";	// CHANGE TO YOUR PROJECT API KEY
 	
@@ -92,7 +92,7 @@ public class OpenRESTfulClientTest {
 		isensor.setDesc("My Temperature");			
 		isensor.setType("guage");
 		isensor.setUri("http://a.b.c.d/hygrometer/temperature");
-		isensor.setUnit("度");
+		isensor.setUnit("摨�");
 		//isensor.setFormula("${value} / 100.0"); // not yet supported			
 		
 		IAttribute[] attributes = new IAttribute[] {
