@@ -1,8 +1,11 @@
 package com.cht.iot.service.api;
 
-import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -12,6 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,19 +25,29 @@ import com.cht.iot.util.JsonUtils;
 
 public class OpenMqttClient {
 	static final Logger LOG = LoggerFactory.getLogger(OpenMqttClient.class);
-
-	static final int QOS_NO_CONFIRMATION = 0;
+	
+	public static final int DEFAULT_MQTT_PORT = 1883;
+	public static final int QOS_NO_CONFIRMATION = 0;
+	public static final int QOS_1 = 1;
+	
+	static final int ACTION_CAPACITY = 20;
 	
 	final String url;
 	final String apiKey;
 	
-	int connectionTimeout = 5; // 5 seconds
-	int keepAliveInterval = 30;
+	int connectionTimeout = 5;	// 5 seconds
+	int keepAliveInterval = 30;	// every 30 seconds
 	
 	Listener listener = new ListenerAdapter();
-	List<String> topics = Collections.emptyList();
+
+	Set<String> topics = Collections.synchronizedSet(new HashSet<String>());
+	
 	
 	Thread thread;
+	
+	BlockingQueue<Action> actions = new ArrayBlockingQueue<Action>(ACTION_CAPACITY);
+	
+	boolean connected = false;
 	
 	/**
 	 * Create a MQTT client. It will build the connection after you call OpenMqttClient.start();
@@ -77,10 +91,13 @@ public class OpenMqttClient {
 	/**
 	 * Set the MQTT topics to subscribe.
 	 * 
+	 * [Deprecated] use 'subscribe(), register()'
+	 * 
 	 * @param topics
-	 */
+	 */	
+	@Deprecated
 	public synchronized void setTopics(List<String> topics) {
-		this.topics = topics;
+		this.topics.addAll(topics);
 	}
 	
 	// ======
@@ -88,30 +105,122 @@ public class OpenMqttClient {
 	/**
 	 * The topic we want to receive the value changed event for the specified sensor.
 	 * 
+	 * [Deprecated] will be only used inside this class.
+	 * 
 	 * @param deviceId
 	 * @param sensorId
 	 * @return
 	 */
+	@Deprecated
 	public static final String getRawdataTopic(String deviceId, String sensorId) {
 		return String.format("/v1/device/%s/sensor/%s/rawdata", deviceId, sensorId);
+	}
+	
+	protected static final String getSavingRawdataTopic(String deviceId) {
+		return String.format("/v1/device/%s/rawdata", deviceId);
 	}
 	
 	/**
 	 * The topic we want to receive the register event for the specified product serial number.
 	 * 
+	 * [Deprecated] will be only used inside this class.
+	 * 
 	 * @param serialId
 	 * @return
 	 */
+	@Deprecated
 	public static final String getRegistryTopic(String serialId) {
 		return String.format("/v1/registry/%s", serialId);
 	}
 	
-	protected Rawdata toRawdata(String json) throws IOException {
+	protected Rawdata toRawdata(String json) {
 		return JsonUtils.fromJson(json, Rawdata.class);
 	}
 	
-	protected Provision toProvision(String json) throws IOException {
+	protected Provision toProvision(String json) {
 		return JsonUtils.fromJson(json, Provision.class);
+	}
+	
+	protected String toJson(Rawdata[] rawdata) {
+		return JsonUtils.toJson(rawdata);
+	}
+	
+	// ======
+	
+	/**
+	 * Listen to the rawdata changed from the specified sensor.
+	 * 
+	 * @param deviceId
+	 * @param sensorId
+	 */
+	public void subscribe(String deviceId, String sensorId) {
+		String topic = getRawdataTopic(deviceId, sensorId);
+		
+		if (topics.add(topic)) { // newbie ?
+			Action a = new Action(Action.Method.subscribe, topic);
+			actions.offer(a);
+		}
+	}
+	
+	/**
+	 * Stop to listen to the rawdata changed from the specified sensor.
+	 * 
+	 * @param deviceId
+	 * @param sensorId
+	 */
+	public void unsubscribe(String deviceId, String sensorId) {
+		String topic = getRawdataTopic(deviceId, sensorId);
+		
+		if (topics.remove(topic)) { // existed ?
+			Action a = new Action(Action.Method.unsubscribe, topic);
+			actions.offer(a);
+		}
+	}
+	
+	/**
+	 * Listen to the configuration from registry.
+	 * 
+	 * @param serialId
+	 */
+	public void register(String serialId) {
+		String topic = getRegistryTopic(serialId);
+		
+		if (topics.add(topic)) { // newbie ?
+			Action a = new Action(Action.Method.subscribe, topic);
+			actions.offer(a);
+		}
+	}
+	
+	/**
+	 * Stop to listen to the configuration from registry.
+	 * 
+	 * @param serialId
+	 */
+	public void unregister(String serialId) {
+		String topic = getRegistryTopic(serialId);
+		
+		if (topics.remove(topic)) { // existed ?
+			Action a = new Action(Action.Method.unsubscribe, topic);
+			actions.offer(a);
+		}
+	}
+	
+	/**
+	 * Save the rawdata into IoT platform.
+	 * 
+	 * @param deviceId
+	 * @param sensorId
+	 * @param value
+	 */
+	public void save(String deviceId, String sensorId, String[] value) {
+		String topic = getSavingRawdataTopic(deviceId);
+		
+		Rawdata rawdata = new Rawdata();
+		rawdata.setId(sensorId);
+		rawdata.setValue(value);
+		
+		Action a = new Action(Action.Method.save, topic, rawdata);
+		actions.offer(a);
 	}
 	
 	// ======
@@ -149,6 +258,15 @@ public class OpenMqttClient {
 		}
 	}
 	
+	/**
+	 * Check the MQTT connection.
+	 * 
+	 * @return
+	 */
+	public boolean isConnected() {
+		return connected;
+	}
+	
 	// ======
 	
 	protected void doConnect(MqttClient client) throws MqttException {
@@ -178,8 +296,9 @@ public class OpenMqttClient {
 			}
 			
 			@Override
-			public void connectionLost(Throwable ex) {
-				LOG.error("Connection is lost", ex);				
+			public void connectionLost(Throwable e) {
+				LOG.error("Connection is lost", e);
+				
 				thread.interrupt();
 			}
 		});
@@ -192,24 +311,19 @@ public class OpenMqttClient {
 		opts.setCleanSession(true);		
 		
 		client.connect(opts);
+		
 		LOG.info("MQTT is connected.");
 	}
 	
-	protected synchronized void doSubscribe(MqttClient client) throws MqttException {
-		int s = topics.size();
-		if (s > 0) {
-			String[] tps = new String[s];
-			int[] qoss = new int[s];
-			for (int i = 0; i < s; i++) {
-				String tp = topics.get(i);
-				tps[i] = tp;
-				qoss[i] = QOS_NO_CONFIRMATION;
-				
-				LOG.info("Subscribe - " + tp);
-			}
+	protected void doSubscribe(MqttClient client) throws MqttException {
+		synchronized (topics) {
+			actions.clear(); // HINT - don't worry, it will not be deadlock
 			
-			client.subscribe(tps, qoss);
-		}
+			for (String topic : topics) {
+				Action a = new Action(Action.Method.subscribe, topic);
+				actions.offer(a);				
+			}
+		}		
 	}
 	
 	protected void process() {
@@ -217,7 +331,7 @@ public class OpenMqttClient {
 			MqttClientPersistence mcp = new MqttDefaultFilePersistence(System.getProperty("java.io.tmpdir")); // should not be null
 		
 			while (thread != null) {
-				LOG.info("Reconnect to MQTT broker: " + url);
+				LOG.info("Connect to MQTT broker - " + url);
 
 				try {
 					String clientId = RandomStringUtils.randomAlphanumeric(23); // max bytes of client id is 23
@@ -225,13 +339,29 @@ public class OpenMqttClient {
 					try {
 						doConnect(client);
 						doSubscribe(client);
+						
+						connected = true;
 
-						synchronized (thread) {
-							thread.wait();
+						while (thread != null) {
+							Action a = actions.take();													
+							
+							if (a.method == Action.Method.subscribe) {
+								client.subscribe(a.topic, QOS_NO_CONFIRMATION);
+								
+							} else if (a.method == Action.Method.unsubscribe) {
+								client.unsubscribe(a.topic);
+								
+							} else if (a.method == Action.Method.save) {
+								MqttTopic mt = client.getTopic(a.topic);
+								
+								String json = toJson(new Rawdata[] { a.rawdata });
+								mt.publish(json.getBytes("UTF-8"), QOS_1, false);
+							}
 						}
 					} finally {
 						try {
 							client.disconnect();
+							
 							LOG.info("MQTT is disconnected");
 							
 						} catch (Exception ex) {
@@ -240,6 +370,8 @@ public class OpenMqttClient {
 				} catch (Exception ex) {
 					LOG.error("Connection is failed", ex);
 				}
+				
+				connected = false;
 
 				try { Thread.sleep(connectionTimeout * 1000L); } catch (InterruptedException ie) {} // sleep then retry
 			}
@@ -249,6 +381,27 @@ public class OpenMqttClient {
 	}
 	
 	// ======
+	
+	static final class Action {
+		Method method;
+		String topic;
+		Rawdata rawdata;
+		
+		public Action(Method method, String topic) {
+			this.method = method;
+			this.topic = topic;			
+		}
+		
+		public Action(Method method, String topic, Rawdata rawdata) {
+			this.method = method;
+			this.topic = topic;			
+			this.rawdata = rawdata;
+		}
+		
+		enum Method {
+			subscribe, unsubscribe, save
+		}
+	}
 	
 	static class Provision {
 		protected Op op;

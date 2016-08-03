@@ -3,10 +3,19 @@ package com.cht.iot.persistence.entity.api;
 import java.util.List;
 
 public class ISubscribe {
+	Boolean unsubscribe;
 	String ck;
 	List<String> resources;
 	
 	public ISubscribe() {
+	}
+	
+	public Boolean getUnsubscribe() {
+		return unsubscribe;
+	}
+	
+	public void setUnsubscribe(Boolean unsubscribe) {
+		this.unsubscribe = unsubscribe;
 	}
 	
 	/**

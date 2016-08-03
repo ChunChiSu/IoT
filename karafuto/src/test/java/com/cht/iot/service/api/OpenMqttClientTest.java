@@ -1,29 +1,26 @@
 package com.cht.iot.service.api;
 
-import java.util.Arrays;
-import java.util.List;
+import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Test;
 
 import com.cht.iot.persistence.entity.data.Rawdata;
 import com.cht.iot.service.api.OpenMqttClient.Listener;
 
 public class OpenMqttClientTest {
-
-	public static void main(String[] args) throws Exception {
-		String host = "iot.cht.com.tw";
-		int port = 1883;
-		String apiKey = "H5T40KG55AWAA9U4";		// CHANGE TO YOUR PROJECT API KEY
-		String serialId = "001002003004005";	// CHANGE TO YOUR EQUIPMENT SERIAL NUMBER
-		
-		String deviceId = "25";					// CHANGE TO YOUR DEVICE ID
-		String sensorId = "sensor-0";				// CHANGE TO YOUR SENSOR ID
-		
+	String host = "iot.cht.com.tw";
+	int port = 1883;
+	String apiKey = "H5T40KG55AWAA9U4";		// CHANGE TO YOUR PROJECT API KEY
+	String serialId = "001002003004005";	// CHANGE TO YOUR EQUIPMENT SERIAL NUMBER
+	
+	String deviceId = "25";					// CHANGE TO YOUR DEVICE ID
+	String sensorId = "sensor-0";				// CHANGE TO YOUR SENSOR ID
+	
+	@Test
+	public void test() throws Exception {
 		OpenMqttClient mqc = new OpenMqttClient(host, port, apiKey);
 		
-		String registryTopic = OpenMqttClient.getRegistryTopic(serialId); // '/v1/registry/001002003004005'
-		String rawdataTopic = OpenMqttClient.getRawdataTopic(deviceId, sensorId); // '/v1/device/25/sensor/sensor-0/rawdata'
-		
-		List<String> topics = Arrays.asList(registryTopic, rawdataTopic);
-		mqc.setTopics(topics);
+		mqc.register(serialId); // '/v1/registry/001002003004005'
+		mqc.subscribe(deviceId, sensorId); // '/v1/device/25/sensor/sensor-0/rawdata'
 		
 		mqc.setListener(new Listener() {
 			@Override
@@ -43,5 +40,12 @@ public class OpenMqttClientTest {
 		});
 		
 		mqc.start(); // wait for incoming message
+		
+		for (;;) {			
+			Thread.sleep(2000L);
+			
+			String[] value = new String[] { RandomStringUtils.randomNumeric(5) };			
+			mqc.save(deviceId, sensorId, value); // change the rawdata
+		}
 	}
 }
