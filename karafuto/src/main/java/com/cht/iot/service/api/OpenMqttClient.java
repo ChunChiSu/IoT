@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -30,8 +30,6 @@ public class OpenMqttClient {
 	public static final int QOS_NO_CONFIRMATION = 0;
 	public static final int QOS_1 = 1;
 	
-	static final int ACTION_CAPACITY = 20;
-	
 	final String url;
 	final String apiKey;
 	
@@ -45,7 +43,7 @@ public class OpenMqttClient {
 	
 	Thread thread;
 	
-	BlockingQueue<Action> actions = new ArrayBlockingQueue<Action>(ACTION_CAPACITY);
+	BlockingQueue<Action> actions = new LinkedBlockingQueue<OpenMqttClient.Action>();
 	
 	boolean connected = false;
 	
@@ -324,7 +322,7 @@ public class OpenMqttClient {
 		LOG.info("MQTT is connected.");
 	}
 	
-	protected void doSubscribe(MqttClient client) throws MqttException {
+	protected void doSubscribe(MqttClient client) throws MqttException {		
 		synchronized (topics) {
 			actions.clear(); // HINT - don't worry, it will not be deadlock
 			
