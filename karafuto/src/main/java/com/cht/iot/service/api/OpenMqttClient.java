@@ -147,6 +147,15 @@ public class OpenMqttClient {
 	
 	// ======
 	
+	protected void put(Action a) {
+		try {
+			actions.put(a);
+			
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
+		}
+	}
+	
 	/**
 	 * Listen to the rawdata changed from the specified sensor.
 	 * 
@@ -158,7 +167,7 @@ public class OpenMqttClient {
 		
 		if (topics.add(topic)) { // newbie ?
 			Action a = new Action(Action.Method.subscribe, topic);
-			actions.offer(a);
+			put(a);
 		}
 	}
 	
@@ -173,7 +182,7 @@ public class OpenMqttClient {
 		
 		if (topics.remove(topic)) { // existed ?
 			Action a = new Action(Action.Method.unsubscribe, topic);
-			actions.offer(a);
+			put(a);
 		}
 	}
 	
@@ -187,7 +196,7 @@ public class OpenMqttClient {
 		
 		if (topics.add(topic)) { // newbie ?
 			Action a = new Action(Action.Method.subscribe, topic);
-			actions.offer(a);
+			put(a);
 		}
 	}
 	
@@ -201,7 +210,7 @@ public class OpenMqttClient {
 		
 		if (topics.remove(topic)) { // existed ?
 			Action a = new Action(Action.Method.unsubscribe, topic);
-			actions.offer(a);
+			put(a);
 		}
 	}
 	
@@ -220,7 +229,7 @@ public class OpenMqttClient {
 		rawdata.setValue(value);
 		
 		Action a = new Action(Action.Method.save, topic, rawdata);
-		actions.offer(a);
+		put(a);
 	}
 	
 	// ======
@@ -321,7 +330,7 @@ public class OpenMqttClient {
 			
 			for (String topic : topics) {
 				Action a = new Action(Action.Method.subscribe, topic);
-				actions.offer(a);				
+				put(a);				
 			}
 		}		
 	}
@@ -346,9 +355,11 @@ public class OpenMqttClient {
 							Action a = actions.take();													
 							
 							if (a.method == Action.Method.subscribe) {
+								LOG.info("Subscribe - {}", a.topic);
 								client.subscribe(a.topic, QOS_NO_CONFIRMATION);
 								
 							} else if (a.method == Action.Method.unsubscribe) {
+								LOG.info("Un-Subscribe - {}", a.topic);
 								client.unsubscribe(a.topic);
 								
 							} else if (a.method == Action.Method.save) {
