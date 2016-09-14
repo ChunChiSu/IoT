@@ -1,11 +1,15 @@
 package com.cht.iot.service.api;
 
+import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.net.ssl.SSLContext;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -55,7 +59,11 @@ public class OpenMqttClient {
 	 * @param apiKey
 	 */
 	public OpenMqttClient(String host, int port, String apiKey) {
-		url = String.format("tcp://%s:%d", host, port);
+		this(host, port, apiKey, false);
+	}
+	
+	public OpenMqttClient(String host, int port, String apiKey, boolean tls) {
+		url = String.format("%s://%s:%d", tls? "ssl" : "tcp", host, port);
 		this.apiKey = apiKey;
 	}
 	
@@ -276,7 +284,7 @@ public class OpenMqttClient {
 	
 	// ======
 	
-	protected void doConnect(MqttClient client) throws MqttException {
+	protected void doConnect(MqttClient client) throws MqttException, GeneralSecurityException {
 		client.setCallback(new MqttCallback() {
 			
 			@Override
@@ -316,6 +324,9 @@ public class OpenMqttClient {
 		opts.setConnectionTimeout(connectionTimeout);
 		opts.setKeepAliveInterval(keepAliveInterval);		
 		opts.setCleanSession(true);		
+		if (url.startsWith("ssl")) {
+			opts.setSocketFactory(SSLContext.getDefault().getSocketFactory());
+		}
 		
 		client.connect(opts);
 		

@@ -45,6 +45,7 @@ public class OpenRESTfulClient {
 		DF.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 	
+	String protocol = "http";
 	final String host;
 	final int port;
 	final String apiKey;
@@ -64,6 +65,10 @@ public class OpenRESTfulClient {
 		this.apiKey = apiKey;
 		
 		client = new HttpClient();
+	}
+	
+	public void enableTls(boolean enable) {
+		protocol = (enable)? "https" : "http";		
 	}
 	
 	public void setTimeout(int timeout) {
@@ -118,7 +123,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public IDevice saveDevice(IDevice dev) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device", host, port);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device", host, port);
 		
 		PostMethod pm = new PostMethod(url);
 		String json = JsonUtils.toJson(dev);		
@@ -137,7 +142,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public IDevice modifyDevice(IDevice dev) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s", host, port, dev.getId());
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s", host, port, dev.getId());
 		
 		PutMethod pm = new PutMethod(url);
 		String json = JsonUtils.toJson(dev);
@@ -155,7 +160,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public IDevice getDevice(String deviceId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s", host, port, deviceId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s", host, port, deviceId);
 		
 		GetMethod gm = new GetMethod(url);
 		return JsonUtils.fromJson(http(gm), IDevice.class);		
@@ -168,7 +173,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public IDevice[] getDevices() throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device", host, port);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device", host, port);
 		
 		GetMethod gm = new GetMethod(url);
 		return JsonUtils.fromJson(http(gm), IDevice[].class);
@@ -181,7 +186,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public void deleteDevice(String deviceId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s", host, port, deviceId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s", host, port, deviceId);
 		
 		DeleteMethod dm = new DeleteMethod(url);
 		http(dm);
@@ -198,7 +203,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public ISensor saveSensor(String deviceId, ISensor sensor) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor", host, port, deviceId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor", host, port, deviceId);
 		
 		PostMethod pm = new PostMethod(url);
 		String json = JsonUtils.toJson(sensor);		
@@ -217,7 +222,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public ISensor modifySensor(String deviceId, ISensor sensor) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensor.getId());
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensor.getId());
 		
 		PutMethod pm = new PutMethod(url);
 		String json = JsonUtils.toJson(sensor);
@@ -236,7 +241,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public ISensor getSensor(String deviceId, String sensorId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensorId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
 		return JsonUtils.fromJson(http(gm), ISensor.class);		
@@ -250,7 +255,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public ISensor[] getSensors(String deviceId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor", host, port, deviceId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor", host, port, deviceId);
 		
 		GetMethod gm = new GetMethod(url);
 		return JsonUtils.fromJson(http(gm), ISensor[].class);
@@ -264,7 +269,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public void deleteSensor(String deviceId, String sensorId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensorId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensorId);
 		
 		DeleteMethod dm = new DeleteMethod(url);
 		http(dm);
@@ -284,7 +289,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public void saveRawdata(String deviceId, String sensorId, String time, Float lat, Float lon, String[] value) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/rawdata", host, port, deviceId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/rawdata", host, port, deviceId);
 		
 		Rawdata rawdata = new Rawdata();
 		rawdata.setId(sensorId);
@@ -332,7 +337,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public Rawdata getRawdata(String deviceId, String sensorId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/rawdata", host, port, deviceId, sensorId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/rawdata", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
 		return JsonUtils.fromJson(http(gm), Rawdata.class);
@@ -355,7 +360,7 @@ public class OpenRESTfulClient {
 		}		
 		start = encode(start);	
 		
-		StringBuilder sb = new StringBuilder(String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/rawdata?start=%s&", host, port, deviceId, sensorId, start));
+		StringBuilder sb = new StringBuilder(String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/rawdata?start=%s&", host, port, deviceId, sensorId, start));
 		if (end != null) {
 			end = encode(end);
 			sb.append("end=");
@@ -390,7 +395,7 @@ public class OpenRESTfulClient {
 		}
 		start = encode(start);
 		
-		StringBuilder sb = new StringBuilder(String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/rawdata?start=%s&", host, port, deviceId, sensorId, start));
+		StringBuilder sb = new StringBuilder(String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/rawdata?start=%s&", host, port, deviceId, sensorId, start));
 		if (end != null) {
 			end = encode(end);
 			sb.append("end=");
@@ -421,7 +426,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public void saveSnapshot(String deviceId, String sensorId, String time, Float lat, Float lon, String[] value, String imageName, String imageType, InputStream imageBody) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/snapshot", host, port, deviceId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/snapshot", host, port, deviceId);
 		
 		Rawdata rawdata = new Rawdata();
 		rawdata.setId(sensorId);
@@ -455,7 +460,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public Rawdata getSnapshotMeta(String deviceId, String sensorId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/snapshot/meta", host, port, deviceId, sensorId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/snapshot/meta", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
 		return JsonUtils.fromJson(http(gm), Rawdata.class);
@@ -477,7 +482,7 @@ public class OpenRESTfulClient {
 		}
 		start = encode(start);
 		
-		StringBuilder sb = new StringBuilder(String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/snapshot/meta?start=%s&", host, port, deviceId, sensorId, start));
+		StringBuilder sb = new StringBuilder(String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/snapshot/meta?start=%s&", host, port, deviceId, sensorId, start));
 		if (end != null) {
 			end = encode(end);
 			sb.append("end=");
@@ -500,7 +505,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public InputStream getSnapshotBody(String deviceId, String sensorId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/snapshot", host, port, deviceId, sensorId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/snapshot", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
 		return http(gm);
@@ -516,7 +521,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public InputStream getSnapshotBody(String deviceId, String sensorId, String imageId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/snapshot/%s", host, port, deviceId, sensorId, imageId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/snapshot/%s", host, port, deviceId, sensorId, imageId);
 		
 		GetMethod gm = new GetMethod(url);
 		return http(gm);
@@ -537,7 +542,7 @@ public class OpenRESTfulClient {
 		}
 		start = encode(start);
 		
-		StringBuilder sb = new StringBuilder(String.format("http://%s:%d/iot/v1/device/%s/sensor/%s/snapshot?start=%s&", host, port, deviceId, sensorId, start));
+		StringBuilder sb = new StringBuilder(String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/snapshot?start=%s&", host, port, deviceId, sensorId, start));
 		if (end != null) {
 			end = encode(end);
 			sb.append("end=");
@@ -562,7 +567,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public ISheet declareSheet(String deviceId, ISheet sheet) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sheet", host, port, deviceId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet", host, port, deviceId);
 		
 		PutMethod pm = new PutMethod(url);
 		String json = JsonUtils.toJson(sheet);		
@@ -581,7 +586,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */	
 	public ISheet getSheet(String deviceId, String sheetId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sheet/%s", host, port, deviceId, sheetId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet/%s", host, port, deviceId, sheetId);
 		
 		GetMethod gm = new GetMethod(url);
 		
@@ -596,7 +601,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public ISheet[] getSheets(String deviceId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sheet", host, port, deviceId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet", host, port, deviceId);
 		
 		GetMethod gm = new GetMethod(url);
 		
@@ -611,7 +616,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public void deleteSheet(String deviceId, String sheetId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sheet/%s", host, port, deviceId, sheetId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet/%s", host, port, deviceId, sheetId);
 		
 		DeleteMethod dm = new DeleteMethod(url);
 		
@@ -628,7 +633,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public void saveRecord(String deviceId, String sheetId, String time, Map<String, String> value) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/record", host, port, deviceId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/record", host, port, deviceId);
 		
 		Record record = new Record();
 		record.setId(sheetId);
@@ -650,7 +655,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public Record getRecord(String deviceId, String sheetId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/device/%s/sheet/%s/record", host, port, deviceId, sheetId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet/%s/record", host, port, deviceId, sheetId);
 		
 		GetMethod gm = new GetMethod(url);
 		
@@ -674,7 +679,7 @@ public class OpenRESTfulClient {
 		}		
 		start = encode(start);	
 		
-		StringBuilder sb = new StringBuilder(String.format("http://%s:%d/iot/v1/device/%s/sheet/%s/record?start=%s&", host, port, deviceId, sheetId, start));
+		StringBuilder sb = new StringBuilder(String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet/%s/record?start=%s&", host, port, deviceId, sheetId, start));
 		if (end != null) {
 			end = encode(end);
 			sb.append("end=");
@@ -710,7 +715,7 @@ public class OpenRESTfulClient {
 		}
 		start = encode(start);
 		
-		StringBuilder sb = new StringBuilder(String.format("http://%s:%d/iot/v1/device/%s/sheet/%s/record?start=%s&", host, port, deviceId, sheetId, start));
+		StringBuilder sb = new StringBuilder(String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet/%s/record?start=%s&", host, port, deviceId, sheetId, start));
 		if (end != null) {
 			end = encode(end);
 			sb.append("end=");
@@ -736,7 +741,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public void reconfigure(String serialId, String digest) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/registry/%s", host, port, serialId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/registry/%s", host, port, serialId);
 
 		IProvision provision = new IProvision();
 		provision.setOp(IProvision.Op.Reconfigure);
@@ -757,7 +762,7 @@ public class OpenRESTfulClient {
 	 * @throws IOException
 	 */
 	public void setDeviceId(String serialId, String digest, String deviceId) throws IOException {
-		String url = String.format("http://%s:%d/iot/v1/registry/%s", host, port, serialId);
+		String url = String.format(protocol + "://%s:%d/iot/v1/registry/%s", host, port, serialId);
 		
 		IProvision provision = new IProvision();
 		provision.setOp(IProvision.Op.SetDeviceId);
