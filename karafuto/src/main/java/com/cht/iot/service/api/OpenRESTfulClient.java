@@ -13,6 +13,7 @@ import java.util.TimeZone;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -64,7 +65,7 @@ public class OpenRESTfulClient {
 		this.port = port;
 		this.apiKey = apiKey;
 		
-		client = new HttpClient();
+		client = new HttpClient(new MultiThreadedHttpConnectionManager());
 	}
 	
 	public void enableTls(boolean enable) {
@@ -101,14 +102,6 @@ public class OpenRESTfulClient {
 		return http(eem);
 	}
 	
-//	protected String toJson(Object obj) throws IOException {
-//		return jackson.writeValueAsString(obj);
-//	}
-//	
-//	protected <T> T fromJson(InputStream is, Class<T> clazz) throws IOException {
-//		return jackson.readValue(is, clazz);
-//	}
-
 	protected String encode(String s) throws IOException {
 		return URLEncoder.encode(s, "UTF-8");
 	}
@@ -126,12 +119,17 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device", host, port);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = JsonUtils.toJson(dev);		
-		
-		IId iid = JsonUtils.fromJson(post(pm, json), IId.class);
-		dev.setId(iid.getId());
-		
-		return dev;
+		try {
+			String json = JsonUtils.toJson(dev);
+			
+			IId iid = JsonUtils.fromJson(post(pm, json), IId.class);
+			dev.setId(iid.getId());
+			
+			return dev;
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -145,11 +143,16 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s", host, port, dev.getId());
 		
 		PutMethod pm = new PutMethod(url);
-		String json = JsonUtils.toJson(dev);
-		
-		post(pm, json);
-		
-		return dev;
+		try {
+			String json = JsonUtils.toJson(dev);
+			
+			post(pm, json);
+			
+			return dev;
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -163,7 +166,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s", host, port, deviceId);
 		
 		GetMethod gm = new GetMethod(url);
-		return JsonUtils.fromJson(http(gm), IDevice.class);		
+		try {
+			return JsonUtils.fromJson(http(gm), IDevice.class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -176,7 +184,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device", host, port);
 		
 		GetMethod gm = new GetMethod(url);
-		return JsonUtils.fromJson(http(gm), IDevice[].class);
+		try {
+			return JsonUtils.fromJson(http(gm), IDevice[].class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -189,7 +202,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s", host, port, deviceId);
 		
 		DeleteMethod dm = new DeleteMethod(url);
-		http(dm);
+		try {
+			http(dm);
+			
+		} finally {
+			dm.releaseConnection();
+		}
 	}
 	
 	// ======
@@ -206,11 +224,16 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor", host, port, deviceId);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = JsonUtils.toJson(sensor);		
-		
-		post(pm, json);
-		
-		return sensor;
+		try {
+			String json = JsonUtils.toJson(sensor);		
+			
+			post(pm, json);
+			
+			return sensor;
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -225,11 +248,16 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensor.getId());
 		
 		PutMethod pm = new PutMethod(url);
-		String json = JsonUtils.toJson(sensor);
-		
-		post(pm, json);
-		
-		return sensor;
+		try {
+			String json = JsonUtils.toJson(sensor);
+			
+			post(pm, json);
+			
+			return sensor;
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -244,7 +272,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
-		return JsonUtils.fromJson(http(gm), ISensor.class);		
+		try {
+			return JsonUtils.fromJson(http(gm), ISensor.class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -258,7 +291,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor", host, port, deviceId);
 		
 		GetMethod gm = new GetMethod(url);
-		return JsonUtils.fromJson(http(gm), ISensor[].class);
+		try {
+			return JsonUtils.fromJson(http(gm), ISensor[].class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -272,7 +310,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s", host, port, deviceId, sensorId);
 		
 		DeleteMethod dm = new DeleteMethod(url);
-		http(dm);
+		try {
+			http(dm);
+			
+		} finally {
+			dm.releaseConnection();
+		}
 	}
 	
 	// ======
@@ -299,9 +342,14 @@ public class OpenRESTfulClient {
 		rawdata.setValue(value);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = JsonUtils.toJson(new Rawdata[] { rawdata });
-		
-		post(pm, json);
+		try {
+			String json = JsonUtils.toJson(new Rawdata[] { rawdata });
+			
+			post(pm, json);
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -340,7 +388,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/rawdata", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
-		return JsonUtils.fromJson(http(gm), Rawdata.class);
+		try {
+			return JsonUtils.fromJson(http(gm), Rawdata.class);
+		
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -377,7 +430,12 @@ public class OpenRESTfulClient {
 		String url = sb.substring(0, sb.length() - 1);
 		
 		GetMethod gm = new GetMethod(url);
-		return JsonUtils.fromJson(http(gm), Rawdata[].class);		
+		try {
+			return JsonUtils.fromJson(http(gm), Rawdata[].class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -406,7 +464,12 @@ public class OpenRESTfulClient {
 		String url = sb.substring(0, sb.length() - 1);
 		
 		DeleteMethod dm = new DeleteMethod(url);
-		http(dm);
+		try {
+			http(dm);
+			
+		} finally {
+			dm.releaseConnection();
+		}
 	}
 	
 	// ======
@@ -438,16 +501,20 @@ public class OpenRESTfulClient {
 		String meta = JsonUtils.toJson(rawdata);
 		
 		PostMethod pm = new PostMethod(url);
-		
-		StringPart mp = new StringPart("meta", meta, "UTF-8");
-		mp.setContentType("application/json");		
-
-		ByteArrayPart bap = new ByteArrayPart(imageName, imageType, IOUtils.toByteArray(imageBody));
-		
-		MultipartRequestEntity mre = new MultipartRequestEntity(new Part[] { mp, bap }, pm.getParams());
-		pm.setRequestEntity(mre);
-		
-		http(pm);
+		try {		
+			StringPart mp = new StringPart("meta", meta, "UTF-8");
+			mp.setContentType("application/json");		
+	
+			ByteArrayPart bap = new ByteArrayPart(imageName, imageType, IOUtils.toByteArray(imageBody));
+			
+			MultipartRequestEntity mre = new MultipartRequestEntity(new Part[] { mp, bap }, pm.getParams());
+			pm.setRequestEntity(mre);
+			
+			http(pm);
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -463,7 +530,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/snapshot/meta", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
-		return JsonUtils.fromJson(http(gm), Rawdata.class);
+		try {
+			return JsonUtils.fromJson(http(gm), Rawdata.class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -493,7 +565,12 @@ public class OpenRESTfulClient {
 		String url = sb.substring(0, sb.length() - 1);
 		
 		GetMethod gm = new GetMethod(url);
-		return JsonUtils.fromJson(http(gm), Rawdata[].class);		
+		try {
+			return JsonUtils.fromJson(http(gm), Rawdata[].class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -508,7 +585,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/snapshot", host, port, deviceId, sensorId);
 		
 		GetMethod gm = new GetMethod(url);
-		return http(gm);
+		try {
+			return http(gm);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -524,7 +606,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sensor/%s/snapshot/%s", host, port, deviceId, sensorId, imageId);
 		
 		GetMethod gm = new GetMethod(url);
-		return http(gm);
+		try {
+			return http(gm);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -553,7 +640,12 @@ public class OpenRESTfulClient {
 		String url = sb.substring(0, sb.length() - 1);
 		
 		DeleteMethod dm = new DeleteMethod(url);
-		http(dm);
+		try {
+			http(dm);
+			
+		} finally {
+			dm.releaseConnection();
+		}
 	}
 	
 	// ======
@@ -570,11 +662,16 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet", host, port, deviceId);
 		
 		PutMethod pm = new PutMethod(url);
-		String json = JsonUtils.toJson(sheet);		
-		
-		post(pm, json);
-		
-		return sheet;
+		try {
+			String json = JsonUtils.toJson(sheet);		
+			
+			post(pm, json);
+			
+			return sheet;
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 
 	/**
@@ -589,8 +686,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet/%s", host, port, deviceId, sheetId);
 		
 		GetMethod gm = new GetMethod(url);
-		
-		return JsonUtils.fromJson(http(gm), ISheet.class);
+		try {		
+			return JsonUtils.fromJson(http(gm), ISheet.class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -604,8 +705,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet", host, port, deviceId);
 		
 		GetMethod gm = new GetMethod(url);
-		
-		return JsonUtils.fromJson(http(gm), ISheet[].class);
+		try {		
+			return JsonUtils.fromJson(http(gm), ISheet[].class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -619,8 +724,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet/%s", host, port, deviceId, sheetId);
 		
 		DeleteMethod dm = new DeleteMethod(url);
-		
-		http(dm);
+		try {		
+			http(dm);
+			
+		} finally {
+			dm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -641,9 +750,14 @@ public class OpenRESTfulClient {
 		record.setValue(value);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = JsonUtils.toJson(new Record[] { record });
-		
-		post(pm, json);
+		try {
+			String json = JsonUtils.toJson(new Record[] { record });
+			
+			post(pm, json);
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -658,8 +772,12 @@ public class OpenRESTfulClient {
 		String url = String.format(protocol + "://%s:%d/iot/v1/device/%s/sheet/%s/record", host, port, deviceId, sheetId);
 		
 		GetMethod gm = new GetMethod(url);
-		
-		return JsonUtils.fromJson(http(gm), Record.class);
+		try {
+			return JsonUtils.fromJson(http(gm), Record.class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -696,8 +814,12 @@ public class OpenRESTfulClient {
 		String url = sb.substring(0, sb.length() - 1);
 		
 		GetMethod gm = new GetMethod(url);
-		
-		return JsonUtils.fromJson(http(gm), Record[].class);		
+		try {
+			return JsonUtils.fromJson(http(gm), Record[].class);
+			
+		} finally {
+			gm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -726,7 +848,12 @@ public class OpenRESTfulClient {
 		String url = sb.substring(0, sb.length() - 1);
 		
 		DeleteMethod dm = new DeleteMethod(url);
-		http(dm);
+		try {
+			http(dm);
+			
+		} finally {
+			dm.releaseConnection();
+		}
 	}
 	
 	// ======
@@ -748,9 +875,14 @@ public class OpenRESTfulClient {
 		provision.setDigest(digest);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = JsonUtils.toJson(provision);
-		
-		post(pm, json);
+		try {
+			String json = JsonUtils.toJson(provision);
+			
+			post(pm, json);
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 	
 	/**
@@ -770,9 +902,14 @@ public class OpenRESTfulClient {
 		provision.setDeviceId(deviceId);
 		
 		PostMethod pm = new PostMethod(url);
-		String json = JsonUtils.toJson(provision);
-		
-		post(pm, json);
+		try {
+			String json = JsonUtils.toJson(provision);
+			
+			post(pm, json);
+			
+		} finally {
+			pm.releaseConnection();
+		}
 	}
 	
 	// ======
