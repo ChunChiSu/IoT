@@ -8,6 +8,7 @@ public class IDevice {
 	String desc;
 	String type;
 	String uri;
+	String key;
 	Float lat;
 	Float lon;
 	IAttribute[] attributes;
@@ -78,6 +79,19 @@ public class IDevice {
 
 	public void setUri(String uri) {
 		this.uri = uri;
+	}
+	
+	/**
+	 * Device Key (Get Only)
+	 * 
+	 * @return
+	 */
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	/**
