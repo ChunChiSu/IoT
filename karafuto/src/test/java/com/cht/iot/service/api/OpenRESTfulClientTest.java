@@ -28,7 +28,7 @@ public class OpenRESTfulClientTest {
 	static final Logger LOG = LoggerFactory.getLogger(OpenRESTfulClientTest.class);	
 	
 	final String host = "iot.cht.com.tw";
-	final int port = 80;
+	final int port = 443;
 	final int timeout = 5000;
 	final String apiKey = "H5T40KG55AWAA9U4";	// CHANGE TO YOUR PROJECT API KEY
 	
