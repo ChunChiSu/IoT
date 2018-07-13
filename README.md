@@ -4,7 +4,7 @@
  - ***karafuto-demo-c/*** 為 C 語言範例程式，每 10 秒鐘更新 IoT 服務平台上的 sensor 數值，並透過 MQTT 訂閱 sensor 數值變化的事件。
 
 ### 開發步驟
- 1. 請向中華電信申請 IoT 服務平台開發者帳號。(e-mail: rickwang@cht.com.tw) 
+ 1. 登入中華電信 IoT 服務平台申請開發者帳號。
  2. 登入中華電信 IoT 服務平台後，請建立專案，並從專案詳細內容中的『權限資料』獲取 Open API 的 API KEY。
  3. 請預先安裝 git, JDK 7與 gradle 編譯工具。
  4. 透過 git clone https://github.com/YunYenWang/IoT.git 獲取 Open API 主程式。
